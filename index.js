@@ -10,8 +10,7 @@ export const swipeDirections = {
 
 const swipeConfig = {
   velocityThreshold: 0.3,
-  directionalOffsetThreshold: 80,
-  gestureIsClickThreshold: 5
+  directionalOffsetThreshold: 80
 };
 
 function isValidSwipe(velocity, velocityThreshold, directionalOffset, directionalOffsetThreshold) {
@@ -23,7 +22,13 @@ class GestureRecognizer extends Component {
   constructor(props, context) {
     super(props, context);
     this.swipeConfig = Object.assign(swipeConfig, props.config);
+  }
 
+  componentWillReceiveProps(props) {
+    this.swipeConfig = Object.assign(swipeConfig, props.config);
+  }
+
+  componentWillMount() {
     const responderEnd = this._handlePanResponderEnd.bind(this);
     const shouldSetResponder = this._handleShouldSetPanResponder.bind(this);
     this._panResponder = PanResponder.create({ //stop JS beautify collapse
@@ -33,20 +38,13 @@ class GestureRecognizer extends Component {
       onPanResponderTerminate: responderEnd
     });
   }
-  
-  componentDidUpdate(prevProps) {
-    if (this.props.config !== prevProps.config) {
-      this.swipeConfig = Object.assign(swipeConfig, this.props.config);
-    }
-  }
-  
+
   _handleShouldSetPanResponder(evt, gestureState) {
     return evt.nativeEvent.touches.length === 1 && !this._gestureIsClick(gestureState);
   }
   
   _gestureIsClick(gestureState) {
-    return Math.abs(gestureState.dx) < swipeConfig.gestureIsClickThreshold
-      && Math.abs(gestureState.dy) < swipeConfig.gestureIsClickThreshold;
+    return Math.abs(gestureState.dx) < 5;
   }
 
   _handlePanResponderEnd(evt, gestureState) {
@@ -55,8 +53,8 @@ class GestureRecognizer extends Component {
   }
 
   _triggerSwipeHandlers(swipeDirection, gestureState) {
-    const {onSwipe, onSwipeUp, onSwipeDown, onSwipeLeft, onSwipeRight} = this.props;
-    const {SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
+    const {onSwipe, onSwipeLeft, onSwipeRight} = this.props;
+    const {SWIPE_LEFT, SWIPE_RIGHT,} = swipeDirections;
     onSwipe && onSwipe(swipeDirection, gestureState);
     switch (swipeDirection) {
       case SWIPE_LEFT:
@@ -70,12 +68,12 @@ class GestureRecognizer extends Component {
 
   _getSwipeDirection(gestureState) {
     const {SWIPE_LEFT, SWIPE_RIGHT} = swipeDirections;
-    const {dx, dy} = gestureState;
+    const {dx} = gestureState;
     if (this._isValidHorizontalSwipe(gestureState)) {
       return (dx > 0)
         ? SWIPE_RIGHT
         : SWIPE_LEFT;
-    }
+    } 
     return null;
   }
 
